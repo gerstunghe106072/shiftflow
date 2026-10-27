@@ -35,10 +35,11 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const storedTheme = loadTheme();
+    const animationFrame = window.requestAnimationFrame(() => {
+      setSettings(loadTheme());
+    });
 
-    setSettings(storedTheme);
-    applyTheme(storedTheme);
+    return () => window.cancelAnimationFrame(animationFrame);
   }, []);
 
   function updateSetting(

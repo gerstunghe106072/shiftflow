@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
+import ThemeController from "@/components/ui/theme-controller";
 
 export const metadata: Metadata = {
   title: {
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="min-h-screen bg-slate-950 text-white">
+        <ThemeController />
         <AppHeader />
         {children}
       </body>

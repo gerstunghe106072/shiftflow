@@ -29,6 +29,7 @@ export default function EditShiftPage() {
   const [pause, setPause] = useState(false);
   const [hourlyRate, setHourlyRate] = useState("");
   const [tips, setTips] = useState("0");
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,10 +53,13 @@ export default function EditShiftPage() {
           return;
         }
 
+        setUserId(user.id);
+
         const { data, error } = await supabase
           .from("shifts")
           .select("*")
           .eq("id", id)
+          .eq("user_id", user.id)
           .single();
 
         if (error || !data) {
@@ -92,6 +96,13 @@ export default function EditShiftPage() {
 
     setSaving(true);
     setMessage("");
+
+    if (!userId) {
+      setMessage("Du musst angemeldet sein, um eine Schicht zu bearbeiten.");
+      setSaving(false);
+      router.push("/login");
+      return;
+    }
 
     const [startHour, startMinute] = start.split(":").map(Number);
     const [endHour, endMinute] = end.split(":").map(Number);
@@ -130,7 +141,8 @@ export default function EditShiftPage() {
           hours,
           wage,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", userId);
 
       if (error) {
         setMessage(error.message);

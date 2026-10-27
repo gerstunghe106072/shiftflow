@@ -9,7 +9,7 @@ const navigation = [
   { href: "/shifts", label: "Schichten" },
   { href: "/add", label: "Neue Schicht" },
   { href: "/analytics", label: "Analytics" },
-  
+  { href: "/export", label: "Export" },
 ];
 
 export default function AppHeader() {
