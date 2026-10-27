@@ -22,45 +22,66 @@ export default function ShiftsPage() {
   const router = useRouter();
 
   const [shifts, setShifts] = useState<ShiftRow[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    loadShifts();
-  }, []);
+    let active = true;
 
-  async function loadShifts() {
-    setLoading(true);
-    setMessage("");
+    async function loadShifts() {
+      setLoading(true);
+      setMessage("");
 
-    const supabase = createClient();
+      const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push("/login");
-      return;
-    }
+      if (!active) return;
 
-    const { data, error } = await supabase
-      .from("shifts")
-      .select("*")
-      .order("date", { ascending: false })
-      .order("start_time", { ascending: false });
+      if (userError || !user) {
+        setLoading(false);
+        router.push("/login");
+        return;
+      }
 
-    if (error) {
-      setMessage(error.message);
+      setUserId(user.id);
+
+      const { data, error } = await supabase
+        .from("shifts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .order("start_time", { ascending: false });
+
+      if (!active) return;
+
+      if (error) {
+        setMessage(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setShifts(data ?? []);
       setLoading(false);
-      return;
     }
 
-    setShifts(data ?? []);
-    setLoading(false);
-  }
+    void loadShifts();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   async function deleteShift(id: string) {
+    if (!userId) {
+      setMessage("Du musst angemeldet sein, um eine Schicht zu löschen.");
+      return;
+    }
+
     const confirmed = window.confirm(
       "Möchtest du diese Schicht wirklich löschen?"
     );
@@ -72,7 +93,8 @@ export default function ShiftsPage() {
     const { error } = await supabase
       .from("shifts")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", userId);
 
     if (error) {
       setMessage(error.message);
